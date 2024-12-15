@@ -145,8 +145,69 @@ fn solve_part1(input: &InputRef) -> u32 {
 }
 
 #[aoc(day5, part2)]
-fn solve_part2(input: &InputRef) -> usize {
-    unimplemented!()
+fn solve_part2(input: &InputRef) -> u32 {
+    let mut relations: HashMap<u32, Relation> = HashMap::new();
+    
+    for rule in &input.rules {
+        let after_entry = relations.entry(rule.after).or_default();
+        after_entry.befores.insert(rule.before);
+
+        let before_entry = relations.entry(rule.before).or_default();
+        before_entry.afters.insert(rule.after);
+    }
+
+    let mut invalid_updates = Vec::with_capacity(input.updates.len());
+
+    'updates:
+    for update in &input.updates {
+        for i in 0..update.pages.len() {
+            let before_page = update.pages[i];
+            if !relations.contains_key(&before_page) { continue; }
+
+            let before_relation = &relations[&before_page];
+
+            for j in i + 1..update.pages.len() {
+                let after_page = update.pages[j];
+                
+                if before_relation.befores.contains(&after_page) {
+                    invalid_updates.push(update.clone());
+                    continue 'updates;
+                }
+            }
+        }
+    }
+
+    let mut sorted_updates_sum = 0;
+
+    for mut update in invalid_updates {
+        let mut changed = true;
+        while changed {
+            changed = false;
+
+            'pages:
+            for i in 0..update.pages.len() - 1 {
+                let before_page = update.pages[i];
+                if !relations.contains_key(&before_page) { continue; }
+
+                let before_relation = &relations[&before_page];
+
+                for j in i + 1..update.pages.len() {
+                    let after_page = update.pages[j];
+                    
+                    if before_relation.befores.contains(&after_page) {
+                        update.pages.swap(i, i + 1);
+
+                        changed = true;
+                        continue 'pages;
+                    }
+                }
+            }
+        }
+
+        sorted_updates_sum += update.pages[(update.pages.len() - 1) / 2];
+    }
+
+    sorted_updates_sum
 }
 
 #[cfg(test)]
@@ -196,7 +257,6 @@ r#"
         let input = super::input_generator(TEST_INPUT).unwrap();
         let result = super::solve_part2(&input);
 
-        //assert_eq!(result, None);
-        assert!(false);
+        assert_eq!(result, 123);
     }
 }
