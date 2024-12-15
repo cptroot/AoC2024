@@ -24,10 +24,8 @@ use nom::bytes::complete::{take_while1, take};
 use nom::multi::fold_many0;
 use nom::combinator;
 use nom::combinator::opt;
-use nom::multi::separated_list1;
 use nom::bytes::complete::tag;
 use nom::branch::alt;
-use nom::sequence::separated_pair;
 
 fn parse_input(input: &str) -> IResult<&str, Input> {
     let (input, _) = opt(tag("\n"))(input)?;
